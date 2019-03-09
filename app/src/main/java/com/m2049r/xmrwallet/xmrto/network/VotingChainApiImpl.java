@@ -1,0 +1,116 @@
+/*
+ * Copyright (c) 2017 m2049r et al.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.m2049r.xmrwallet.xmrto.network;
+
+import android.support.annotation.NonNull;
+
+import com.m2049r.xmrwallet.util.OkHttpHelper;
+import com.m2049r.xmrwallet.xmrto.XmrToError;
+import com.m2049r.xmrwallet.xmrto.XmrToException;
+import com.m2049r.xmrwallet.xmrto.api.VotingChainApi;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import timber.log.Timber;
+
+public class VotingChainApiImpl implements VotingChainApi {
+
+    @NonNull
+    private final OkHttpClient okHttpClient;
+
+    private final HttpUrl baseUrl;
+
+    public VotingChainApiImpl(@NonNull final OkHttpClient okHttpClient, final HttpUrl baseUrl) {
+        this.okHttpClient = okHttpClient;
+        this.baseUrl = baseUrl;
+    }
+
+    @Override
+    public void call(@NonNull final String path, @NonNull final NetworkCallback callback) {
+        call(path, null, callback);
+    }
+
+    @Override
+    public void call(@NonNull final String path, final JSONObject request, @NonNull final NetworkCallback callback) {
+        final HttpUrl url = baseUrl.newBuilder()
+                // .addPathSegment(path)
+                // .addPathSegment("") // xmr.to needs a trailing slash!
+                .build();
+
+        Timber.d(url.toString());
+        final Request httpRequest = createHttpRequest(request, url);
+        Timber.d(httpRequest.toString());
+        Timber.d(request == null ? "null request" : request.toString());
+
+        okHttpClient.newCall(httpRequest).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(final Call call, final IOException ex) {
+                Timber.d("VotingChainApiImpl failure");
+                callback.onError(ex);
+            }
+
+            @Override
+            public void onResponse(final Call call, final Response response) throws IOException {
+                Timber.d("onResponse code=%d", response.code());
+                if (response.isSuccessful()) {
+                    try {
+                        Object json = new JSONTokener(response.body().string()).nextValue();
+                        if (json instanceof JSONObject)
+                            callback.onSuccess((JSONObject) json);
+
+                        else if (json instanceof JSONArray)
+                            callback.onSuccess((JSONArray)json);
+
+                    } catch (JSONException ex) {
+                        callback.onError(ex);
+                    }
+                } else {
+                    try {
+                        final JSONObject json = new JSONObject(response.body().string());
+                        final XmrToError error = new XmrToError(json);
+                        Timber.e("voting-chain server says %d/%s", response.code(), response.body().string());
+                        callback.onError(new XmrToException(response.code(), error));
+                    } catch (JSONException ex) {
+                        callback.onError(new XmrToException(response.code()));
+                    }
+                }
+            }
+        });
+    }
+
+    private Request createHttpRequest(final JSONObject request, final HttpUrl url) {
+        if (request != null) {
+            final RequestBody body = RequestBody.create(
+                    MediaType.parse("application/json"), request.toString());
+            return OkHttpHelper.getPostRequest(url, body);
+        } else {
+            return OkHttpHelper.getGetRequest(url);
+        }
+    }
+}
