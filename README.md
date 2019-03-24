@@ -1,3 +1,9 @@
+# SIMPLE PROOF OF CONCEPT - JUST FOR DEMONSTRATION PURPOSE
+
+## VOTING-CHAIN-APP based on Monerujo
+
+
+
 # Monerujo
 Another Android Monero Wallet for Monero
 	**(not
