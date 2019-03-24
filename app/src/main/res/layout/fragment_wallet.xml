@@ -65,30 +65,8 @@
                     android:visibility="visible"
                     tools:text="1099700.23001" />
 
-                <Spinner
-                    android:id="@+id/sCurrency"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:entries="@array/currency"
-                    android:gravity="center"
-                    android:minWidth="80dp"
-                    android:paddingStart="4dp"
-                    android:paddingTop="0dp"
-                    android:paddingEnd="4dp"
-                    android:paddingBottom="2dp"
-                    tools:listitem="@layout/item_spinner_balance" />
             </LinearLayout>
         </FrameLayout>
-
-        <TextView
-            android:id="@+id/tvUnconfirmedAmount"
-            style="@style/MoneroText.Unconfirmed"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            tools:text="+ 0.00 unconfirmed" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -112,6 +90,7 @@
                 android:layout_height="wrap_content"
                 android:visibility="visible"
                 tools:text="Synced 1 410 674 blocks" />
+
         </LinearLayout>
 
         <ProgressBar
@@ -136,8 +115,12 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingBottom="80dp"
+            android:visibility="invisible"
             app:layoutManager="LinearLayoutManager"
-            tools:listitem="@layout/item_transaction" />
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            tools:listitem="@layout/item_candidate_btn" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -149,34 +132,6 @@
             android:layout_marginBottom="12dp"
             android:orientation="horizontal"
             android:weightSum="2">
-
-            <Button
-                android:id="@+id/bReceive"
-                style="@style/MoneroButton.Take"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:layout_weight="1"
-                android:drawableStart="@drawable/ic_hand"
-                android:enabled="false"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:text="@string/label_wallet_receive"
-                android:visibility="invisible" />
-
-            <Button
-                android:id="@+id/bSend"
-                style="@style/MoneroButton.Give"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:layout_weight="1"
-                android:drawableStart="@drawable/ic_send"
-                android:enabled="false"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:text="@string/label_wallet_send"
-                android:visibility="invisible" />
 
         </LinearLayout>
     </FrameLayout>

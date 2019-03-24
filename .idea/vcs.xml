@@ -2,5 +2,11 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external-libs/build/src/libsodium" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external-libs/build/src/monero" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external-libs/build/src/monero/external/miniupnp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external-libs/build/src/monero/external/rapidjson" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external-libs/build/src/monero/external/rapidjson/thirdparty/gtest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external-libs/build/src/monero/external/unbound" vcs="Git" />
   </component>
 </project>

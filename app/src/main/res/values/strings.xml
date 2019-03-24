@@ -104,7 +104,7 @@
     <string name="changepw_success">Password changed</string>
 
     <string name="label_daemon">Node</string>
-    <string name="connect_stagenet" translatable="false">Stagenet</string>
+    <string name="connect_stagenet" translatable="false">Voting-Chain</string>
     <string name="connect_testnet" translatable="false">Testnet</string>
     <string name="status_wallet_loading">Loading Wallet &#8230;</string>
     <string name="status_wallet_unloaded">Wallet saved</string>

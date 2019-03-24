@@ -22,7 +22,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_marginTop="-8dp"
-            android:src="@drawable/ic_logo_horizontol_xmrujo"
+            android:src="@drawable/voting_chain"
             android:visibility="visible" />
 
         <LinearLayout
@@ -39,7 +39,7 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:visibility="invisible"
-                tools:text="monerujo" />
+                tools:text="Voting-Chain" />
 
             <TextView
                 android:id="@+id/toolbarSubtitle"
@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:visibility="invisible"
-                tools:text="monerujo" />
+                tools:text="Voting-Chain" />
         </LinearLayout>
     </FrameLayout>
 </merge>
