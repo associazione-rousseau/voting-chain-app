@@ -45,7 +45,7 @@ import okhttp3.ResponseBody;
 import timber.log.Timber;
 
 public class NodeInfo extends Node {
-    final static public int MIN_MAJOR_VERSION = 9;
+    final static public int MIN_MAJOR_VERSION = 1;
 
     private long height = 0;
     private long timestamp = 0;
@@ -222,7 +222,7 @@ public class NodeInfo extends Node {
                     .build();
             final RequestBody reqBody = RequestBody
                     .create(MediaType.parse("application/json"),
-                            "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"getlastblockheader\"}");
+                                "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"getlastblockheader\"}");
             Request request = OkHttpHelper.getPostRequest(url, reqBody);
             long ta = System.nanoTime();
             try (Response response = client.newCall(request).execute()) {
@@ -249,7 +249,7 @@ public class NodeInfo extends Node {
         return false;
     }
 
-    static final private int[] TEST_PORTS = {18089}; // check only opt-in port
+    static final private int[] TEST_PORTS = {30011, 30021, 30031, 30041, 30051}; // check only opt-in port
 
     public boolean findRpcService() {
         // if already have an rpcPort, use that
@@ -261,6 +261,8 @@ public class NodeInfo extends Node {
                 return true;
             }
         }
+        //this.rpcPort = 30011;
+        //return true;
         return false;
     }
 }

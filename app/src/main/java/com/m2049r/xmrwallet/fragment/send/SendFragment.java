@@ -121,7 +121,7 @@ public class SendFragment extends Fragment
         arrowNext = getResources().getDrawable(R.drawable.ic_navigate_next_white_24dp);
 
         ViewGroup llNotice = view.findViewById(R.id.llNotice);
-        Notice.showAll(llNotice, ".*_send");
+        //Notice.showAll(llNotice, ".*_send");
 
         spendViewPager = view.findViewById(R.id.pager);
         pagerAdapter = new SpendPagerAdapter(getChildFragmentManager());

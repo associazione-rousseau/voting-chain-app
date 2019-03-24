@@ -21,6 +21,7 @@ import android.support.annotation.NonNull;
 import com.m2049r.xmrwallet.xmrto.api.XmrToCallback;
 import com.m2049r.xmrwallet.xmrto.api.QueryOrderStatus;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -229,6 +230,11 @@ class QueryOrderStatusImpl implements QueryOrderStatus {
                     } catch (JSONException ex) {
                         callback.onError(ex);
                     }
+                }
+
+                @Override
+                public void onSuccess(JSONArray jsonObject) {
+
                 }
 
                 @Override

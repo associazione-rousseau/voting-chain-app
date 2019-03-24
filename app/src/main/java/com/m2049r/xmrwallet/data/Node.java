@@ -302,7 +302,7 @@ public class Node {
                 DEFAULT_LEVIN_PORT = 28080;
                 break;
             case NetworkType_Stagenet:
-                DEFAULT_LEVIN_PORT = 38080;
+                DEFAULT_LEVIN_PORT = 30010;
                 break;
             default:
                 throw new IllegalStateException("unsupported net " + WalletManager.getInstance().getNetworkType());

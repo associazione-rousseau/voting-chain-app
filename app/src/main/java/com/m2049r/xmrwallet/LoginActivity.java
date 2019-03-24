@@ -639,7 +639,7 @@ public class LoginActivity extends BaseActivity
                 toolbar.setBackgroundResource(R.color.colorPrimaryDark);
                 break;
             case NetworkType_Stagenet:
-                toolbar.setSubtitle(getString(R.string.connect_stagenet));
+                toolbar.setTitle("Voting-Chain"); //setSubtitle(getString(R.string.connect_stagenet));
                 toolbar.setBackgroundResource(R.color.colorPrimaryDark);
                 break;
             default:
@@ -917,7 +917,7 @@ public class LoginActivity extends BaseActivity
                     @Override
                     public boolean createWallet(File aFile, String password) {
                         Wallet newWallet = WalletManager.getInstance()
-                                .createWallet(aFile, password, MNEMONIC_LANGUAGE);
+                                .createWallet(aFile, password, MNEMONIC_LANGUAGE, getApplicationContext());
                         boolean success = (newWallet.getStatus() == Wallet.Status.Status_Ok);
                         if (!success) {
                             Timber.e(newWallet.getErrorString());

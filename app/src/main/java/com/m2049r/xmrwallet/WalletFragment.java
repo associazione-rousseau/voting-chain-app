@@ -17,6 +17,7 @@
 package com.m2049r.xmrwallet;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,14 +39,23 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.m2049r.xmrwallet.layout.TransactionInfoAdapter;
-import com.m2049r.xmrwallet.model.TransactionInfo;
+import com.m2049r.xmrwallet.layout.CandidateInfoAdapter;
+import com.m2049r.xmrwallet.model.CandidateInfo;
 import com.m2049r.xmrwallet.model.Wallet;
+import com.m2049r.xmrwallet.model.WalletManager;
 import com.m2049r.xmrwallet.service.exchange.api.ExchangeApi;
 import com.m2049r.xmrwallet.service.exchange.api.ExchangeCallback;
 import com.m2049r.xmrwallet.service.exchange.api.ExchangeRate;
 import com.m2049r.xmrwallet.util.Helper;
+import com.m2049r.xmrwallet.util.OkHttpHelper;
 import com.m2049r.xmrwallet.widget.Toolbar;
+import com.m2049r.xmrwallet.xmrto.api.VotingChainApi;
+import com.m2049r.xmrwallet.xmrto.network.VotingChainApiImpl;
+import com.m2049r.xmrwallet.xmrto.network.NetworkCallback;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -55,9 +65,14 @@ import java.util.stream.Collectors;
 
 import timber.log.Timber;
 
+import static android.content.Context.MODE_PRIVATE;
+
 public class WalletFragment extends Fragment
-        implements TransactionInfoAdapter.OnInteractionListener {
-    private TransactionInfoAdapter adapter;
+        implements CandidateInfoAdapter.OnInteractionListener {
+    private CandidateInfoAdapter adapter;
+
+    private List<CandidateInfo> candidateInfoLists;
+
     private NumberFormat formatter = NumberFormat.getInstance();
 
     private TextView tvStreetView;
@@ -71,11 +86,14 @@ public class WalletFragment extends Fragment
     private Button bReceive;
     private Button bSend;
 
+    private RecyclerView recyclerView = null;
+
     private Spinner sCurrency;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        candidateInfoLists = new ArrayList<>();
         setHasOptionsMenu(true);
     }
 
@@ -102,47 +120,97 @@ public class WalletFragment extends Fragment
         pbProgress = view.findViewById(R.id.pbProgress);
         tvBalance = view.findViewById(R.id.tvBalance);
         showBalance(Helper.getDisplayAmount(0));
-        tvUnconfirmedAmount = view.findViewById(R.id.tvUnconfirmedAmount);
+//        tvUnconfirmedAmount = view.findViewById(R.id.tvUnconfirmedAmount);
         showUnconfirmed(0);
         ivSynced = view.findViewById(R.id.ivSynced);
 
-        sCurrency = view.findViewById(R.id.sCurrency);
-        ArrayAdapter currencyAdapter = ArrayAdapter.createFromResource(getContext(), R.array.currency, R.layout.item_spinner_balance);
-        currencyAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown_item);
-        sCurrency.setAdapter(currencyAdapter);
+        // sCurrency = view.findViewById(R.id.sCurrency);
+        // ArrayAdapter currencyAdapter = ArrayAdapter.createFromResource(getContext(), R.array.currency, R.layout.item_spinner_balance);
+        // currencyAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown_item);
+        // sCurrency.setAdapter(currencyAdapter);
 
-        bSend = view.findViewById(R.id.bSend);
-        bReceive = view.findViewById(R.id.bReceive);
+        // bSend = view.findViewById(R.id.bSend);
+ //       bReceive = view.findViewById(R.id.bReceive);
 
-        RecyclerView recyclerView = view.findViewById(R.id.list);
+        recyclerView = view.findViewById(R.id.list);
 
-        this.adapter = new TransactionInfoAdapter(getActivity(), this);
-        recyclerView.setAdapter(adapter);
-
-        bSend.setOnClickListener(new View.OnClickListener() {
+        getVotingChainApi("candidate/getall").call("", new NetworkCallback() {
             @Override
-            public void onClick(View v) {
-                activityCallback.onSendRequest();
+            public void onSuccess(JSONArray array) {
+                Timber.d("getVotingChainApi - candidate getall success");
+                try {
+                for (int i = 0; i < array.length(); i++){
+
+                    JSONObject jo = array.getJSONObject(i);
+
+                    CandidateInfo candidate = new CandidateInfo(jo.getString("name"), jo.getString("lastname"),
+                            jo.getString("address"));
+                    candidateInfoLists.add(candidate);
+
+                    getActivity().runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+
+                            // Stuff that updates the UI
+                            adapter = new CandidateInfoAdapter(candidateInfoLists, getActivity());
+                            recyclerView.setAdapter(adapter);
+
+                            activityCallback.forceUpdate();
+                        }
+                    });
+
+
+                }
+                }
+                catch (JSONException ex) {
+                    Timber.d(ex.getLocalizedMessage());
+                }
+            }
+
+            @Override
+            public void onSuccess(JSONObject jsonObject) {
+                Timber.d("getVotingChainApi - candidate getall success");
+            }
+
+            @Override
+            public void onError(Exception ex) {
+                Timber.d("getVotingChainApi - candidate getall error");
+                ex.printStackTrace();
             }
         });
-        bReceive.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                activityCallback.onWalletReceive();
-            }
-        });
 
-        sCurrency.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                refreshBalance();
-            }
+            //if(this.balance <= 0.5)
+            //    recyclerView.setVisibility(View.INVISIBLE);
+            //else
+            //    recyclerView.setVisibility(View.VISIBLE);
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) {
-                // nothing (yet?)
-            }
-        });
+
+
+        // bSend.setOnClickListener(new View.OnClickListener() {
+        //     @Override
+        //     public void onClick(View v) {
+        //         activityCallback.onSendRequest();
+        //     }
+        // });
+        // bReceive.setOnClickListener(new View.OnClickListener() {
+        //     @Override
+        //     public void onClick(View v) {
+        //         activityCallback.onWalletReceive();
+        //     }
+        // });
+
+        // sCurrency.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        //     @Override
+        //     public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+        //         refreshBalance();
+        //     }
+
+        //     @Override
+        //     public void onNothingSelected(AdapterView<?> parentView) {
+        //         // nothing (yet?)
+        //     }
+        // });
 
         if (activityCallback.isSynced()) {
             onSynced();
@@ -154,7 +222,56 @@ public class WalletFragment extends Fragment
     }
 
     void showBalance(String balance) {
-        tvBalance.setText(balance);
+        showBalance(balance, "");
+    }
+
+    void showBalance(String balance, String walletName) {
+
+        float balanceNum = 0;
+        int voted = -1;
+        SharedPreferences sp = null;
+
+        if(walletName != "" && getContext() != null) {
+            sp = getContext().getApplicationContext().getSharedPreferences(walletName, MODE_PRIVATE);
+            voted = sp.getInt("voted", -1);
+        }
+
+        try {
+            balanceNum = Float.valueOf(balance);
+
+            if(voted == 0 && balanceNum < 1.0) {
+                tvBalance.setText("Profilo non abilitato");
+                if(recyclerView != null)
+                    recyclerView.setVisibility(View.INVISIBLE);
+            }
+            else if(voted == 0 && balanceNum >= 1.0) {
+                tvBalance.setText("Profilo abilitato\nSeleziona il candidato:");
+                if(recyclerView != null)
+                    recyclerView.setVisibility(View.VISIBLE);
+            }
+            else if(voted == 1) {
+                tvBalance.setText("Voto espresso correttamente!");
+                SharedPreferences.Editor edit = sp.edit();
+                edit.putInt("voted", 2);
+                edit.apply();
+                if(recyclerView != null)
+                    recyclerView.setVisibility(View.INVISIBLE);
+            }
+            else if(voted == 2) {
+                tvBalance.setText("Hai già espresso il tuo voto!");
+                if(recyclerView != null)
+                    recyclerView.setVisibility(View.INVISIBLE);
+            }
+            else {
+                tvBalance.setText("Verifica profilo in corso...");
+                if(recyclerView != null)
+                    recyclerView.setVisibility(View.INVISIBLE);
+            }
+
+        } catch(NumberFormatException nfe) {
+            System.out.println("Could not parse " + nfe);
+        }
+
         if (!activityCallback.isStreetMode()) {
             llBalance.setVisibility(View.VISIBLE);
             tvStreetView.setVisibility(View.INVISIBLE);
@@ -165,12 +282,12 @@ public class WalletFragment extends Fragment
     }
 
     void showUnconfirmed(double unconfirmedAmount) {
-        if (!activityCallback.isStreetMode()) {
-            String unconfirmed = Helper.getFormattedAmount(unconfirmedAmount, true);
-            tvUnconfirmedAmount.setText(getResources().getString(R.string.xmr_unconfirmed_amount, unconfirmed));
-        } else {
-            tvUnconfirmedAmount.setText(null);
-        }
+        // if (!activityCallback.isStreetMode()) {
+        //     String unconfirmed = Helper.getFormattedAmount(unconfirmedAmount, true);
+        //     tvUnconfirmedAmount.setText(getResources().getString(R.string.xmr_unconfirmed_amount, unconfirmed));
+        // } else {
+        //     tvUnconfirmedAmount.setText(null);
+        // }
     }
 
     void updateBalance() {
@@ -278,9 +395,9 @@ public class WalletFragment extends Fragment
         updateBalance();
     }
 
-    // Callbacks from TransactionInfoAdapter
+    // Callbacks from CandidateInfoAdapter
     @Override
-    public void onInteraction(final View view, final TransactionInfo infoItem) {
+    public void onInteraction(final View view, final CandidateInfo infoItem) {
         activityCallback.onTxDetailsRequest(infoItem);
     }
 
@@ -288,24 +405,48 @@ public class WalletFragment extends Fragment
 
     public void onRefreshed(final Wallet wallet, final boolean full) {
         Timber.d("onRefreshed(%b)", full);
-        if (full) {
-            List<TransactionInfo> list = new ArrayList<>();
-            final long streetHeight = activityCallback.getStreetModeHeight();
-            Timber.d("StreetHeight=%d", streetHeight);
-            for (TransactionInfo info : wallet.getHistory().getAll()) {
-                Timber.d("TxHeight=%d", info.blockheight);
-                if (info.isPending || (info.blockheight >= streetHeight)) list.add(info);
+
+        showBalance(String.valueOf(wallet.getUnlockedBalance()), wallet.getName());
+        // if (full) {
+        //     List<CandidateInfo> list = new ArrayList<>();
+        //     final long streetHeight = activityCallback.getStreetModeHeight();
+        //     Timber.d("StreetHeight=%d", streetHeight);
+        //     for (CandidateInfo info : wallet.getHistory().getAll()) {
+        //         Timber.d("TxHeight=%d", info.blockheight);
+        //         if (info.isPending || (info.blockheight >= streetHeight)) list.add(info);
+        //     }
+        //     adapter.setInfos(list);
+        //     adapter.notifyDataSetChanged();
+        // }
+        // updateStatus(wallet);
+    }
+
+    private VotingChainApi vcApi = null;
+
+
+    private final VotingChainApi getVotingChainApi(String relativePath) {
+        if (vcApi == null) {
+            synchronized (this) {
+                if (vcApi == null) {
+                    vcApi = new VotingChainApiImpl(OkHttpHelper.getOkHttpClient(),
+                            Helper.getVotingChainBaseUrl(relativePath));
+                }
             }
-            adapter.setInfos(list);
-            adapter.notifyDataSetChanged();
         }
-        updateStatus(wallet);
+        return vcApi;
+    }
+
+    static JSONObject createRequest(final String name, final String address) throws JSONException {
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name", name);
+        jsonObject.put("address", address);
+        return jsonObject;
     }
 
     public void onSynced() {
         if (!activityCallback.isWatchOnly()) {
-            bSend.setVisibility(View.VISIBLE);
-            bSend.setEnabled(true);
+            // bSend.setVisibility(View.VISIBLE);
+            // bSend.setEnabled(true);
         }
         if (isVisible()) enableAccountsList(true); //otherwise it is enabled in onResume()
     }
@@ -319,8 +460,8 @@ public class WalletFragment extends Fragment
 
     private void showReceive() {
         if (walletLoaded) {
-            bReceive.setVisibility(View.VISIBLE);
-            bReceive.setEnabled(true);
+            // bReceive.setVisibility(View.VISIBLE);
+            // bReceive.setEnabled(true);
         }
     }
 
@@ -417,7 +558,7 @@ public class WalletFragment extends Fragment
 
         void onSendRequest();
 
-        void onTxDetailsRequest(TransactionInfo info);
+        void onTxDetailsRequest(CandidateInfo info);
 
         boolean isSynced();
 
